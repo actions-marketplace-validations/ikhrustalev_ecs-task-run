@@ -1,0 +1,55 @@
+name: Test Action
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+  workflow_dispatch:
+
+permissions:
+  id-token: write
+  contents: read
+
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    environment: ecs-task-run
+    steps:
+      - name: Configure AWS credentials
+        uses: aws-actions/configure-aws-credentials@v4
+        with:
+          role-to-assume: ${{ vars.AWS_ROLE_ARN }}
+          aws-region: ${{ vars.AWS_REGION }}
+
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Test basic command
+        uses: ./
+        with:
+          cluster_arn: ${{ vars.AWS_ECS_CLUSTER_ARN }}
+          service_name: ${{ vars.AWS_ECS_SERVICE_NAME }}
+          command: echo "Hello from ECS"
+
+      - name: Test multi-line command
+        uses: ./
+        with:
+          cluster_arn: ${{ vars.AWS_ECS_CLUSTER_ARN }}
+          service_name: ${{ vars.AWS_ECS_SERVICE_NAME }}
+          command: |
+            echo "Step 1"
+            echo "Step 2"
+
+      - name: Test fire and forget
+        id: async
+        uses: ./
+        with:
+          cluster_arn: ${{ vars.AWS_ECS_CLUSTER_ARN }}
+          service_name: ${{ vars.AWS_ECS_SERVICE_NAME }}
+          command: echo "Async"
+          wait: false
+
+      - name: Verify outputs
+        run: |
+          echo "Task ARN: ${{ steps.async.outputs.task_arn }}"
+          echo "Task ID: ${{ steps.async.outputs.task_id }}"
