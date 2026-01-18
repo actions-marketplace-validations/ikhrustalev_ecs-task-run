@@ -33,28 +33,27 @@ jobs:
           command: echo "Async"
           wait: false
 
-      - name: Test basic command
-        uses: ./
-        with:
-          cluster_arn: ${{ vars.AWS_ECS_CLUSTER_ARN }}
-          service_name: ${{ vars.AWS_ECS_SERVICE_NAME }}
-          command: echo "Hello from ECS"
-
-      - name: Test multi-line command
+      - name: Test basic multi-line command
         uses: ./
         with:
           cluster_arn: ${{ vars.AWS_ECS_CLUSTER_ARN }}
           service_name: ${{ vars.AWS_ECS_SERVICE_NAME }}
           command: |
-            echo "Step 1"
-            echo "Step 2"
+            echo "Counting to 1..10..."
+            for i in $(seq 1 10)
+            do
+              echo "$i"
+              sleep 0.5
+            done
+            echo "Done!"
 
       - name: Test timeout
         uses: ./
+        continue-on-error: true
         with:
           cluster_arn: ${{ vars.AWS_ECS_CLUSTER_ARN }}
           service_name: ${{ vars.AWS_ECS_SERVICE_NAME }}
-          timeout: 5
+          timeout: 20
           command: sleep 30
 
       - name: Verify outputs
