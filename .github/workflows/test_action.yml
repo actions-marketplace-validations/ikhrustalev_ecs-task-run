@@ -49,6 +49,14 @@ jobs:
             echo "Step 1"
             echo "Step 2"
 
+      - name: Test timeout
+        uses: ./
+        with:
+          cluster_arn: ${{ vars.AWS_ECS_CLUSTER_ARN }}
+          service_name: ${{ vars.AWS_ECS_SERVICE_NAME }}
+          timeout: 5
+          command: sleep 30
+
       - name: Verify outputs
         run: |
           echo "Task ARN: ${{ steps.async.outputs.task_arn }}"
