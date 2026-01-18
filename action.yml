@@ -196,14 +196,9 @@ runs:
         # Wait for task to complete
         echo "Waiting for task to complete..."
         while true; do
-          STATUS=$(get_task_status)
-          if [ "$STATUS" != "$LAST_STATUS" ]; then
-            LAST_STATUS="$STATUS"
-            echo "Task status: $STATUS"
-          fi
-
-          # Stream logs if enabled
-          if [ "$STREAM_LOGS" == "true" ] && [ ! -z "$LOG_GROUP" ] && [ "$LOG_GROUP" != "null" ]; then
+          # Stream logs if enabled (skip during PROVISIONING/PENDING to avoid missing early logs)
+          if [ "$STREAM_LOGS" == "true" ] && [ ! -z "$LOG_GROUP" ] && [ "$LOG_GROUP" != "null" ] && \
+             [ "$LAST_STATUS" != "PROVISIONING" ] && [ "$LAST_STATUS" != "PENDING" ] && [ ! -z "$LAST_STATUS" ]; then
             if check_log_stream "$LOG_STREAM"; then
               if [ "$LOGS_SEEN" == "false" ]; then
                 echo "Log stream available, streaming logs..."
@@ -236,6 +231,12 @@ runs:
                 fi
               fi
             fi
+          fi
+
+          STATUS=$(get_task_status)
+          if [ "$STATUS" != "$LAST_STATUS" ]; then
+            LAST_STATUS="$STATUS"
+            echo "Task status: $STATUS"
           fi
 
           # Check timeout
